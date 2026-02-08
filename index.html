@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mercadeo - Tienda PCB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="styles.css" rel="stylesheet">
+  <script src="auth.js"></script>
+ </head>
+ <body class="h-full font-body bg-gradient-to-br from-[#0f172a] via-[#1a1f3a] to-[#1e2847] text-white overflow-auto">
+  <div class="min-h-full w-full">
+   <!-- Header -->
+   <header class="sticky top-0 z-50 glass-card border-b border-white/10 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+     <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-full bg-white/20 p-2">
+        <img src="galeria/image1.png" alt="Logo" class="w-full h-full object-contain">
+       </div>
+       <div>
+        <h1 id="store-name" class="font-display font-bold text-xl text-white">Mercadeo</h1>
+        <p class="text-xs text-gray-400">Tienda de la escuela</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-4">
+       <a href="https://chatgpt.com/g/g-69846cf9e5488191a673f07dedddb4f9-ia-de-mercadeo-pcb"
+         target="_blank"
+         class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all hover:scale-105 font-semibold text-sm">
+        <span>🤖</span>
+        <span>IA de Mercadeo</span>
+       </a>
+       <button onclick="showLoginModal()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-sm">
+        <span>🔐</span>
+        <span>Admin</span>
+       </button>
+       <button id="cart-toggle-mobile" class="lg:hidden relative p-2 rounded-lg hover:bg-white/10 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m10 0l2-9m-9 9h12M9 20a1 1 0 11-2 0 1 1 0 012 0m8 0a1 1 0 11-2 0 1 1 0 012 0" />
+        </svg>
+        <span id="cart-count-mobile" class="cart-badge absolute -top-1 -right-1 text-xs">0</span>
+       </button>
+      </div>
+     </div>
+
+     <!-- Barra de búsqueda y filtros -->
+     <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex-1 relative">
+       <input type="text" id="search-input" placeholder="🔍 Buscar dulces..."
+        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 pl-10 pr-12 text-white placeholder-gray-400 focus:border-[#3b82f6] focus:outline-none transition-colors">
+       <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+       </svg>
+       <!-- Botón de comando de voz -->
+       <button id="voice-btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center transition-all" title="Comando de voz">
+        <span id="voice-icon">🎤</span>
+       </button>
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+       <button class="filter-btn active" data-category="todos">Todos</button>
+       <button class="filter-btn" data-category="dulces">🍬 Dulces</button>
+       <button class="filter-btn" data-category="chocolates">🍫 Chocolates</button>
+       <button class="filter-btn" data-category="bebidas">🥤 Bebidas</button>
+       <button class="filter-btn" data-category="snacks">🍿 Snacks</button>
+      </div>
+     </div>
+    </div>
+   </header>
+
+   <!-- Carrusel de Ofertas -->
+   <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="relative overflow-hidden rounded-xl glass-card border border-white/10">
+     <div id="carousel-container" class="flex transition-transform duration-500 ease-in-out">
+      <!-- Las ofertas se cargarán dinámicamente -->
+     </div>
+     <!-- Indicadores -->
+     <div id="carousel-indicators" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+      <!-- Los indicadores se cargarán dinámicamente -->
+     </div>
+     <!-- Botones de navegación -->
+     <button id="carousel-prev" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors">
+      <span class="text-white text-xl">‹</span>
+     </button>
+     <button id="carousel-next" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors">
+      <span class="text-white text-xl">›</span>
+     </button>
+    </div>
+   </div>
+
+   <div class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Tienda de Dulces -->
+    <div class="lg:col-span-2">
+     <div class="mb-6 animate-slide-up flex items-center justify-between">
+      <div>
+       <h2 class="font-display text-3xl font-bold mb-2">Nuestros Dulces</h2>
+       <p id="tagline" class="text-gray-400">Selecciona tus dulces favoritos y nosotros te los llevamos al salón</p>
+      </div>
+      <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+       <span id="products-count">10</span> productos
+      </div>
+     </div>
+
+     <!-- Grid de productos -->
+     <div id="candies-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <!-- Candy cards generated by JS -->
+     </div>
+
+     <!-- Mensaje cuando no hay resultados -->
+     <div id="no-results" class="hidden text-center py-12">
+      <div class="text-6xl mb-4">😕</div>
+      <h3 class="text-xl font-bold mb-2">No encontramos productos</h3>
+      <p class="text-gray-400">Intenta con otra búsqueda o filtro</p>
+     </div>
+    </div>
+
+    <!-- Carrito y Formulario -->
+    <aside class="lg:col-span-1">
+     <div class="sticky top-20 space-y-6">
+      <!-- Cart Section -->
+      <div class="glass-card rounded-2xl p-6 border border-white/10 animate-slide-up stagger-1">
+       <div class="flex items-center justify-between mb-4">
+        <h3 class="font-display font-bold text-xl flex items-center gap-2">
+         <span class="text-2xl">🛒</span> Mi Carrito
+        </h3>
+        <div class="flex items-center gap-3">
+         <span id="cart-count" class="cart-badge">0</span>
+         <!-- Botón X para cerrar carrito móvil -->
+         <button id="close-cart-mobile" class="lg:hidden text-gray-400 hover:text-white text-2xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors">
+          ×
+         </button>
+        </div>
+       </div>
+
+       <div id="cart-items" class="space-y-3 mb-4 max-h-80 overflow-y-auto custom-scrollbar">
+        <p class="text-gray-400 text-sm text-center py-8">Tu carrito está vacío</p>
+       </div>
+
+       <button id="clear-cart-btn" class="hidden w-full text-sm text-red-400 hover:text-red-300 transition-colors mb-4">
+        🗑️ Vaciar carrito
+       </button>
+
+       <div class="border-t border-white/10 pt-4 space-y-2">
+        <div class="flex justify-between text-sm">
+         <span class="text-gray-400">Subtotal:</span>
+         <span id="subtotal" class="font-semibold">$0.00</span>
+        </div>
+        <div class="flex justify-between text-sm">
+         <span class="text-gray-400">Entrega (9AM-2PM):</span>
+         <span id="delivery-cost-display" class="font-semibold text-[#f59e0b]">$2.00</span>
+        </div>
+        <div class="flex justify-between text-lg font-bold bg-gradient-to-r from-[#1e40af] to-[#3b82f6] rounded-lg p-3 mt-4">
+         <span>Total:</span>
+         <span id="total-price">$2.00</span>
+        </div>
+
+        <!-- Dividir cuenta -->
+        <div id="split-section" class="hidden pt-3 border-t border-white/10">
+         <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-400">Dividir entre:</span>
+          <div class="flex items-center gap-2">
+           <button onclick="changeSplitCount(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 transition-colors font-bold">−</button>
+           <span id="split-count" class="text-lg font-bold w-8 text-center">1</span>
+           <button onclick="changeSplitCount(1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 transition-colors font-bold">+</button>
+          </div>
+         </div>
+         <div class="bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg p-3 text-center">
+          <p class="text-xs text-gray-400 mb-1">Cada persona paga:</p>
+          <p id="split-amount" class="text-2xl font-bold text-[#f59e0b]">$0.00</p>
+         </div>
+        </div>
+
+        <button id="toggle-split-btn" class="hidden w-full text-sm text-[#3b82f6] hover:text-[#60a5fa] transition-colors mt-3 flex items-center justify-center gap-2">
+         <span>👥</span>
+         <span id="split-btn-text">Dividir cuenta</span>
+        </button>
+
+        <!-- Botón Calculadora Nutricional -->
+        <!-- <button id="nutrition-btn" class="w-full text-sm text-green-400 hover:text-green-300 transition-colors mt-3 flex items-center justify-center gap-2 py-2 rounded-lg bg-green-500/10 hover:bg-green-500/20">
+         <span>🥗</span>
+         <span>Ver Info Nutricional</span>
+        </button>
+       </div>
+      </div> -->
+
+      <!-- Formulario -->
+      <div class="glass-card rounded-2xl p-6 border border-white/10 animate-slide-up stagger-2">
+       <h3 class="font-display font-bold text-lg mb-4 flex items-center gap-2"><span class="text-xl">📋</span> Tus Datos</h3>
+       <form id="order-form" class="space-y-3">
+        <div><label for="nombre" class="block text-sm font-semibold text-gray-300 mb-1">Nombre Completo</label> <input type="text" id="nombre" placeholder="Juan Pérez" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors" required>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+         <div><label for="grado" class="block text-sm font-semibold text-gray-300 mb-1">Grado</label> <input type="text" id="grado" placeholder="10mo" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors" required>
+         </div>
+         <div><label for="grupo" class="block text-sm font-semibold text-gray-300 mb-1">Grupo</label> <input type="text" id="grupo" placeholder="A" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors" required>
+         </div>
+        </div>
+        <div><label for="salon" class="block text-sm font-semibold text-gray-300 mb-1">Salón</label> <input type="text" id="salon" placeholder="101" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors" required>
+        </div>
+        <div><label for="telefono" class="block text-sm font-semibold text-gray-300 mb-1">Número de Teléfono</label> <input type="tel" id="telefono" placeholder="787-123-4567" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors" required>
+        </div>
+
+        <!-- Método de pago -->
+        <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+         <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+           <span class="text-2xl">💵</span>
+           <div>
+            <p class="text-sm font-semibold">Método de Pago</p>
+            <p class="text-xs text-gray-400">Solo efectivo</p>
+           </div>
+          </div>
+          <span class="text-lg font-bold text-[#10b981]">Efectivo</span>
+         </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-primary w-full text-white font-bold py-3 rounded-lg mt-4 flex items-center justify-center gap-2"> <span>🎉</span> <span>Solicitar Entrega</span> </button>
+       </form>
+       <p class="text-xs text-gray-500 text-center mt-4">Los dulces se entregarán entre 9:00 AM y 2:00 PM</p>
+       <p class="text-xs text-gray-500 text-center mt-2">💵 Pago en efectivo al recibir</p>
+      </div>
+     </div>
+    </aside>
+   </div>
+
+   <!-- Canvas para Confetti -->
+   <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;"></canvas>
+
+   <!-- Modal de Calculadora Nutricional -->
+   <div id="nutrition-modal" class="modal-overlay">
+    <div class="glass-card rounded-2xl p-8 max-w-2xl w-full border border-white/10 animate-slide-up max-h-[90vh] overflow-y-auto">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="font-display text-2xl font-bold flex items-center gap-2">
+       <span>🥗</span> Información Nutricional
+      </h3>
+      <button id="close-nutrition-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+     </div>
+     <div id="nutrition-content" class="space-y-4">
+      <!-- Contenido generado por JS -->
+     </div>
+     <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+      <p class="text-sm text-gray-300 text-center">
+       💡 <strong>Nota:</strong> Los valores nutricionales son aproximados y pueden variar según el fabricante.
+      </p>
+     </div>
+    </div>
+   </div>
+
+   <!-- Modal de Confirmación -->
+   <div id="confirmation-modal" class="modal-overlay">
+    <div class="glass-card rounded-2xl p-8 max-w-md w-full border border-white/10 animate-slide-up">
+     <div class="text-center mb-6">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-[#10b981]/20 flex items-center justify-center text-4xl animate-bounce">
+       ✅
+      </div>
+      <h3 class="font-display text-2xl font-bold mb-2">¡Gracias por tu pedido!</h3>
+      <p class="text-gray-400">En breve se te estará entregando</p>
+      <div class="mt-4 inline-flex items-center gap-2 bg-[#10b981]/20 text-[#10b981] px-4 py-2 rounded-full text-sm font-semibold">
+       <span>⏱️</span>
+       <span>Tiempo estimado: 15-30 min</span>
+      </div>
+     </div>
+     <div id="confirmation-details" class="space-y-2 mb-6 text-sm bg-white/5 rounded-lg p-4"><!-- Details populated by JS -->
+     </div>
+     <div class="bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-lg p-4 mb-6 text-center">
+      <p class="text-sm text-gray-300 mb-2">💵 Método de Pago</p>
+      <p class="text-lg font-bold text-[#f59e0b]">Efectivo al recibir</p>
+     </div>
+     <button id="close-modal-btn" class="btn-primary w-full text-white font-bold py-3 rounded-lg">
+      🛒 Hacer Otro Pedido
+     </button>
+    </div>
+   </div>
+  </div>
+  <script src="script.js"></script>
+ </body>
+</html>

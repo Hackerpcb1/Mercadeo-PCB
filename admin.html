@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Mercadeo PCB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+  <script src="auth.js"></script>
+</head>
+<body class="h-full font-body bg-gradient-to-br from-[#0f172a] via-[#1a1f3a] to-[#1e2847] text-white">
+  <div class="min-h-full w-full">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass-card border-b border-white/10 shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 p-2">
+            <img src="galeria/image1.png" alt="Logo" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <h1 class="font-display font-bold text-xl text-white">Panel de Administración</h1>
+            <p class="text-xs text-gray-400">Gestiona tu tienda</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">
+            🏠 Volver a la tienda
+          </a>
+          <button onclick="logout()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-semibold">
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="glass-card rounded-xl p-6 border border-white/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm mb-1">Total Productos</p>
+              <p id="total-products" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="text-4xl">📦</div>
+          </div>
+        </div>
+        
+        <div class="glass-card rounded-xl p-6 border border-white/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm mb-1">Categorías</p>
+              <p class="text-3xl font-bold">4</p>
+            </div>
+            <div class="text-4xl">🏷️</div>
+          </div>
+        </div>
+        
+        <div class="glass-card rounded-xl p-6 border border-white/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm mb-1">Precio Promedio</p>
+              <p id="avg-price" class="text-3xl font-bold">$0.00</p>
+            </div>
+            <div class="text-4xl">💰</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Product Button -->
+      <div class="mb-6 flex justify-between items-center">
+        <h2 class="font-display text-2xl font-bold">Gestión de Productos</h2>
+        <button onclick="showAddProductModal()" class="btn-primary px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
+          <span>➕</span>
+          <span>Añadir Producto</span>
+        </button>
+      </div>
+
+      <!-- Products Table -->
+      <div class="glass-card rounded-xl border border-white/10 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-white/5 border-b border-white/10">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Emoji</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Nombre</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Categoría</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Precio</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Popular</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <!-- Products will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="product-modal" class="modal-overlay">
+      <div class="glass-card rounded-2xl p-8 max-w-2xl w-full border border-white/10 animate-slide-up max-h-[90vh] overflow-y-auto">
+        <h3 id="modal-title" class="font-display text-2xl font-bold mb-6">Añadir Producto</h3>
+        
+        <form id="product-form" class="space-y-4">
+          <input type="hidden" id="product-id">
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Nombre del Producto</label>
+              <input type="text" id="product-name" required
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Emoji</label>
+              <input type="text" id="product-emoji" required maxlength="2"
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-2xl text-center placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors"
+                placeholder="🍬">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Precio ($)</label>
+              <input type="number" id="product-price" step="0.01" min="0" required
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Categoría</label>
+              <select id="product-category" required
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-[#3b82f6] focus:outline-none transition-colors">
+                <option value="dulces">🍬 Dulces</option>
+                <option value="chocolates">🍫 Chocolates</option>
+                <option value="bebidas">🥤 Bebidas</option>
+                <option value="snacks">🍿 Snacks</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="product-popular" class="w-5 h-5 rounded">
+              <span class="text-sm font-semibold text-gray-300">Marcar como Popular</span>
+            </label>
+          </div>
+          
+          <div class="flex gap-3 pt-4">
+            <button type="submit" class="btn-primary flex-1 text-white font-bold py-3 rounded-lg">
+              💾 Guardar Producto
+            </button>
+            <button type="button" onclick="closeProductModal()" class="btn-secondary flex-1 py-3 rounded-lg font-semibold">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
+
