@@ -26,17 +26,20 @@
         <p class="text-xs text-gray-400">Tienda de la escuela</p>
        </div>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 sm:gap-4">
+       <!-- Botón IA - Solo emoji en móvil, texto completo en desktop -->
        <a href="https://chatgpt.com/g/g-69846cf9e5488191a673f07dedddb4f9-ia-de-mercadeo-pcb"
          target="_blank"
-         class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all hover:scale-105 font-semibold text-sm">
+         class="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all hover:scale-105 font-semibold text-sm">
         <span>🤖</span>
-        <span>IA de Mercadeo</span>
+        <span class="hidden sm:inline">IA de Mercadeo</span>
        </a>
-       <button onclick="showLoginModal()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-sm">
+       <!-- Botón Admin - Solo emoji en móvil, texto completo en desktop -->
+       <button onclick="showLoginModal()" class="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-sm">
         <span>🔐</span>
-        <span>Admin</span>
+        <span class="hidden sm:inline">Admin</span>
        </button>
+       <!-- Botón carrito móvil -->
        <button id="cart-toggle-mobile" class="lg:hidden relative p-2 rounded-lg hover:bg-white/10 transition-colors">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m10 0l2-9m-9 9h12M9 20a1 1 0 11-2 0 1 1 0 012 0m8 0a1 1 0 11-2 0 1 1 0 012 0" />
