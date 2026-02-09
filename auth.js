@@ -64,15 +64,29 @@ function login(username, password) {
 
 function logout() {
   localStorage.removeItem(AUTH_CONFIG.tokenKey);
-  window.location.reload();
+  localStorage.removeItem('user_data');
+  localStorage.removeItem('user_logged_in');
+  window.location.href = 'index.html';
 }
 
 function isAuthenticated() {
   const token = localStorage.getItem(AUTH_CONFIG.tokenKey);
-  return verifyToken(token) !== false;
+  const userLoggedIn = localStorage.getItem('user_logged_in');
+  return verifyToken(token) !== false || userLoggedIn === 'true';
 }
 
 function getCurrentUser() {
+  // Primero verificar si hay datos de usuario de Google
+  const userData = localStorage.getItem('user_data');
+  if (userData) {
+    try {
+      return JSON.parse(userData);
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+    }
+  }
+
+  // Si no, verificar token tradicional
   const token = localStorage.getItem(AUTH_CONFIG.tokenKey);
   return verifyToken(token);
 }

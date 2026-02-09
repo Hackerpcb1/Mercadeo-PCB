@@ -466,17 +466,43 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
   submitBtn.innerHTML = '<div class="loading-spinner"></div> Procesando...';
 
   try {
-    const result = await window.dataSdk.create(orderData);
+    // Guardar pedido en localStorage
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    orderData.id = Date.now(); // ID único basado en timestamp
+    orders.push(orderData);
+    localStorage.setItem('orders', JSON.stringify(orders));
 
-    if (result.isOk) {
-      showConfirmation(orderData);
-      resetForm();
-    } else {
-      showToast('Error al procesar el pedido. Intenta nuevamente.');
+    // Actualizar estadísticas del usuario si está logueado
+    if (currentUser) {
+      currentUser.totalSpent = (currentUser.totalSpent || 0) + total;
+      currentUser.ordersCount = (currentUser.ordersCount || 0) + 1;
+
+      // Guardar usuario actualizado
+      if (currentUser.provider === 'google' || localStorage.getItem('user_logged_in') === 'true') {
+        localStorage.setItem('user_data', JSON.stringify(currentUser));
+      } else {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        // Actualizar en el array de usuarios
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex(u => u.email === currentUser.email);
+        if (userIndex !== -1) {
+          users[userIndex] = currentUser;
+          localStorage.setItem('users', JSON.stringify(users));
+        }
+      }
+
+      updateUserUI();
     }
+
+    // Mostrar confirmación
+    showConfirmation(orderData);
+    resetForm();
+
+    showToast('✅ ¡Pedido procesado exitosamente!', 'success');
   } catch (error) {
-    showToast('Error al procesar el pedido.');
-    console.error(error);
+    showToast('❌ Error al procesar el pedido. Intenta nuevamente.', 'error');
+    console.error('Error procesando pedido:', error);
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = '<span>🎉</span><span>Solicitar Entrega</span>';
@@ -995,7 +1021,33 @@ document.querySelectorAll('#register-form .social-login-btn').forEach(btn => {
 let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 let users = JSON.parse(localStorage.getItem('users') || '[]');
 
+// Verificar si hay usuario de Google al cargar
+function loadCurrentUser() {
+  // Primero verificar si hay datos de Google
+  const userData = localStorage.getItem('user_data');
+  const userLoggedIn = localStorage.getItem('user_logged_in');
+
+  if (userData && userLoggedIn === 'true') {
+    try {
+      currentUser = JSON.parse(userData);
+      return currentUser;
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+    }
+  }
+
+  // Si no, usar el sistema tradicional
+  currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  return currentUser;
+}
+
+// Cargar usuario al inicio
+currentUser = loadCurrentUser();
+
 function updateUserUI() {
+  // Recargar usuario por si cambió
+  currentUser = loadCurrentUser();
+
   const userProfileSection = document.getElementById('user-profile-section');
   const menuLoginBtn = document.getElementById('menu-login-btn');
   const menuLogoutBtn = document.getElementById('menu-logout-btn');
@@ -1007,17 +1059,40 @@ function updateUserUI() {
     menuLogoutBtn.classList.remove('hidden');
 
     // Actualizar información del usuario
-    const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
-    document.getElementById('user-avatar').textContent = initials;
+    const userAvatarEl = document.getElementById('user-avatar');
+    const profileAvatarEl = document.getElementById('profile-avatar');
+
+    // Si el usuario tiene foto de Google, mostrarla
+    if (currentUser.picture && currentUser.provider === 'google') {
+      // Crear imagen para el avatar del menú
+      userAvatarEl.innerHTML = `<img src="${currentUser.picture}" alt="${currentUser.name}" class="w-full h-full rounded-full object-cover">`;
+
+      // Crear imagen para el perfil completo
+      if (profileAvatarEl) {
+        profileAvatarEl.innerHTML = `<img src="${currentUser.picture}" alt="${currentUser.name}" class="w-full h-full rounded-full object-cover">`;
+      }
+    } else {
+      // Mostrar iniciales si no hay foto
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      userAvatarEl.textContent = initials;
+      if (profileAvatarEl) {
+        profileAvatarEl.textContent = initials;
+      }
+    }
+
     document.getElementById('user-name-display').textContent = currentUser.name;
     document.getElementById('user-email-display').textContent = currentUser.email;
 
-    // Actualizar perfil
-    document.getElementById('profile-avatar').textContent = initials;
-    document.getElementById('profile-name').textContent = currentUser.name;
-    document.getElementById('profile-email').textContent = currentUser.email;
-    document.getElementById('profile-total-spent').textContent = `$${(currentUser.totalSpent || 0).toFixed(2)}`;
-    document.getElementById('profile-orders-count').textContent = currentUser.ordersCount || 0;
+    // Actualizar perfil completo si existe
+    const profileNameEl = document.getElementById('profile-name');
+    const profileEmailEl = document.getElementById('profile-email');
+    const profileTotalSpentEl = document.getElementById('profile-total-spent');
+    const profileOrdersCountEl = document.getElementById('profile-orders-count');
+
+    if (profileNameEl) profileNameEl.textContent = currentUser.name;
+    if (profileEmailEl) profileEmailEl.textContent = currentUser.email;
+    if (profileTotalSpentEl) profileTotalSpentEl.textContent = `$${(currentUser.totalSpent || 0).toFixed(2)}`;
+    if (profileOrdersCountEl) profileOrdersCountEl.textContent = currentUser.ordersCount || 0;
   } else {
     // Usuario NO logueado
     userProfileSection.classList.add('hidden');
@@ -1145,7 +1220,11 @@ closeProfileBtn.addEventListener('click', () => {
 // Cerrar sesión
 document.getElementById('menu-logout-btn').addEventListener('click', () => {
   currentUser = null;
+  // Limpiar todos los datos de sesión (Google y manual)
   localStorage.removeItem('currentUser');
+  localStorage.removeItem('user_data');
+  localStorage.removeItem('user_logged_in');
+  localStorage.removeItem('mercadeo_auth_token');
   updateUserUI();
   closeHamburgerMenu();
   showToast('Sesión cerrada correctamente', 'info');
