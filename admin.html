@@ -1,15 +1,19 @@
 <!doctype html>
 <html lang="es" class="h-full">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Administración - Mercadeo PCB</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link href="styles.css" rel="stylesheet">
   <script src="auth.js"></script>
 </head>
-<body class="h-full font-body bg-gradient-to-br from-[#0f172a] via-[#1a1f3a] to-[#1e2847] text-white">
+
+<body class="h-full font-body overflow-auto">
   <div class="min-h-full w-full">
     <!-- Header -->
     <header class="sticky top-0 z-50 glass-card border-b border-white/10 shadow-lg">
@@ -24,6 +28,10 @@
           </div>
         </div>
         <div class="flex items-center gap-4">
+          <button id="theme-toggle" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-xl"
+            title="Cambiar tema">
+            <span id="theme-icon">🌙</span>
+          </button>
           <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">
             🏠 Volver a la tienda
           </a>
@@ -46,7 +54,7 @@
             <div class="text-4xl">📦</div>
           </div>
         </div>
-        
+
         <div class="glass-card rounded-xl p-6 border border-white/10">
           <div class="flex items-center justify-between">
             <div>
@@ -56,7 +64,7 @@
             <div class="text-4xl">🏷️</div>
           </div>
         </div>
-        
+
         <div class="glass-card rounded-xl p-6 border border-white/10">
           <div class="flex items-center justify-between">
             <div>
@@ -71,7 +79,8 @@
       <!-- Add Product Button -->
       <div class="mb-6 flex justify-between items-center">
         <h2 class="font-display text-2xl font-bold">Gestión de Productos</h2>
-        <button onclick="showAddProductModal()" class="btn-primary px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
+        <button onclick="showAddProductModal()"
+          class="btn-primary px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
           <span>➕</span>
           <span>Añadir Producto</span>
         </button>
@@ -101,19 +110,20 @@
 
     <!-- Add/Edit Product Modal -->
     <div id="product-modal" class="modal-overlay">
-      <div class="glass-card rounded-2xl p-8 max-w-2xl w-full border border-white/10 animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div
+        class="glass-card rounded-2xl p-8 max-w-2xl w-full border border-white/10 animate-slide-up max-h-[90vh] overflow-y-auto">
         <h3 id="modal-title" class="font-display text-2xl font-bold mb-6">Añadir Producto</h3>
-        
+
         <form id="product-form" class="space-y-4">
           <input type="hidden" id="product-id">
-          
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-300 mb-2">Nombre del Producto</label>
               <input type="text" id="product-name" required
                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors">
             </div>
-            
+
             <div>
               <label class="block text-sm font-semibold text-gray-300 mb-2">Emoji</label>
               <input type="text" id="product-emoji" required maxlength="2"
@@ -121,14 +131,14 @@
                 placeholder="🍬">
             </div>
           </div>
-          
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-300 mb-2">Precio ($)</label>
               <input type="number" id="product-price" step="0.01" min="0" required
                 class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors">
             </div>
-            
+
             <div>
               <label class="block text-sm font-semibold text-gray-300 mb-2">Categoría</label>
               <select id="product-category" required
@@ -140,19 +150,20 @@
               </select>
             </div>
           </div>
-          
+
           <div>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" id="product-popular" class="w-5 h-5 rounded">
               <span class="text-sm font-semibold text-gray-300">Marcar como Popular</span>
             </label>
           </div>
-          
+
           <div class="flex gap-3 pt-4">
             <button type="submit" class="btn-primary flex-1 text-white font-bold py-3 rounded-lg">
               💾 Guardar Producto
             </button>
-            <button type="button" onclick="closeProductModal()" class="btn-secondary flex-1 py-3 rounded-lg font-semibold">
+            <button type="button" onclick="closeProductModal()"
+              class="btn-secondary flex-1 py-3 rounded-lg font-semibold">
               Cancelar
             </button>
           </div>
@@ -163,5 +174,5 @@
 
   <script src="admin.js"></script>
 </body>
-</html>
 
+</html>

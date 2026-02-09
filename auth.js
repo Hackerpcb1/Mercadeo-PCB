@@ -92,29 +92,29 @@ function showLoginModal() {
         <p class="text-gray-400">Ingresa tus credenciales</p>
       </div>
       
-      <form id="login-form" class="space-y-4">
+      <form id="admin-login-form" class="space-y-4">
         <div>
           <label class="block text-sm font-semibold text-gray-300 mb-2">Usuario</label>
-          <input type="text" id="login-username" 
+          <input type="text" id="admin-login-username"
             class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors"
             placeholder="Admin" required>
         </div>
-        
+
         <div>
           <label class="block text-sm font-semibold text-gray-300 mb-2">Contraseña</label>
-          <input type="password" id="login-password" 
+          <input type="password" id="admin-login-password"
             class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-[#3b82f6] focus:outline-none transition-colors"
             placeholder="••••••••" required>
         </div>
-        
-        <div id="login-error" class="hidden text-red-400 text-sm text-center p-2 bg-red-400/10 rounded-lg">
+
+        <div id="admin-login-error" class="hidden text-red-400 text-sm text-center p-2 bg-red-400/10 rounded-lg">
         </div>
-        
+
         <button type="submit" class="btn-primary w-full text-white font-bold py-3 rounded-lg">
           🔓 Iniciar Sesión
         </button>
-        
-        <button type="button" onclick="document.getElementById('login-modal').remove()" 
+
+        <button type="button" onclick="document.getElementById('login-modal').remove()"
           class="w-full text-gray-400 hover:text-white transition-colors py-2">
           Cancelar
         </button>
@@ -124,19 +124,22 @@ function showLoginModal() {
   
   document.body.appendChild(modal);
   
-  document.getElementById('login-form').addEventListener('submit', (e) => {
+  document.getElementById('admin-login-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    
+    const username = document.getElementById('admin-login-username').value;
+    const password = document.getElementById('admin-login-password').value;
+
     const result = login(username, password);
-    
+
     if (result.success) {
       modal.remove();
-      showToast('✅ Sesión iniciada correctamente', 'success');
+      // Usar showToast si está disponible, sino solo redirigir
+      if (typeof showToast === 'function') {
+        showToast('✅ Sesión iniciada correctamente', 'success');
+      }
       setTimeout(() => window.location.href = 'admin.html', 500);
     } else {
-      const errorDiv = document.getElementById('login-error');
+      const errorDiv = document.getElementById('admin-login-error');
       errorDiv.textContent = result.message;
       errorDiv.classList.remove('hidden');
     }

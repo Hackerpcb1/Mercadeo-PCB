@@ -11,6 +11,8 @@ const defaultConfig = {
 
 let config = { ...defaultConfig };
 
+// Theme Management - Ahora manejado por el menú hamburguesa
+
 // Cargar productos desde localStorage o usar por defecto
 function loadCandies() {
   const stored = localStorage.getItem('mercadeo_products');
@@ -80,6 +82,14 @@ function addToCart(candy, quantity = 1) {
   updateCart();
   updateProductBadges(); // Solo actualizar badges, no recargar todo
   showToast(`✅ ${candy.name} añadido al carrito`, 'success');
+
+  // Enviar notificación
+  addNotification(
+    '🛒 Producto añadido',
+    `${candy.name} (${qty}x) - $${(candy.price * qty).toFixed(2)}`,
+    'success',
+    candy.emoji
+  );
 
   // Animación del botón
   const btn = event?.target?.closest('.candy-card');
@@ -256,8 +266,8 @@ function renderCandies() {
           </button>
         </div>
       </div>
-      <h4 class="font-semibold text-white mb-1">${candy.name}</h4>
-      <p class="text-xs text-gray-400 mb-2 capitalize">${getCategoryName(candy.category)}</p>
+      <h4 class="font-semibold mb-1" style="color: var(--text-primary);">${candy.name}</h4>
+      <p class="text-xs mb-2 capitalize" style="color: var(--text-secondary);">${getCategoryName(candy.category)}</p>
       <p class="price-tag font-bold text-lg mb-3">$${candy.price.toFixed(2)}</p>
 
       ${inCart ? `
@@ -375,6 +385,33 @@ function showConfirmation(orderData) {
 
   // ¡Lanzar confetti! 🎉
   launchConfetti();
+
+  // Actualizar estadísticas del usuario si está logueado
+  if (currentUser) {
+    const total = orderData.total;
+    currentUser.totalSpent = (currentUser.totalSpent || 0) + total;
+    currentUser.ordersCount = (currentUser.ordersCount || 0) + 1;
+
+    // Actualizar en localStorage
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+    // Actualizar en la lista de usuarios
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+      users[userIndex] = currentUser;
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    updateUserUI();
+  }
+
+  // Enviar notificación de pedido completado
+  addNotification(
+    '✅ ¡Pedido Confirmado!',
+    `Tu pedido de $${orderData.total.toFixed(2)} ha sido procesado. ¡Gracias por tu compra!`,
+    'success',
+    '🎉'
+  );
 }
 
 function resetForm() {
@@ -430,7 +467,7 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
 
   try {
     const result = await window.dataSdk.create(orderData);
-    
+
     if (result.isOk) {
       showConfirmation(orderData);
       resetForm();
@@ -901,4 +938,785 @@ function showNutritionInfo() {
   nutritionModal.classList.add('active');
 }
 
+// ========== SPLASH SCREEN ==========
+function initSplashScreen() {
+  const splashScreen = document.getElementById('splash-screen');
+
+  setTimeout(() => {
+    splashScreen.style.opacity = '0';
+    setTimeout(() => {
+      splashScreen.style.display = 'none';
+    }, 500);
+  }, 2000);
+}
+
+// ========== MENÚ HAMBURGUESA ==========
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const hamburgerMenu = document.getElementById('hamburger-menu');
+const hamburgerOverlay = document.getElementById('hamburger-overlay');
+const closeHamburgerBtn = document.getElementById('close-hamburger-btn');
+
+function openHamburgerMenu() {
+  hamburgerMenu.classList.add('open');
+  hamburgerOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHamburgerMenu() {
+  hamburgerMenu.classList.remove('open');
+  hamburgerOverlay.classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+hamburgerBtn.addEventListener('click', openHamburgerMenu);
+closeHamburgerBtn.addEventListener('click', closeHamburgerMenu);
+hamburgerOverlay.addEventListener('click', closeHamburgerMenu);
+
+// ========== INICIO DE SESIÓN SOCIAL ==========
+// Botones de Apple y Google en formulario de login
+document.querySelectorAll('#login-form .social-login-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const provider = btn.classList.contains('apple') ? 'Apple' : 'Google';
+    showToast(`Inicio de sesión con ${provider} próximamente disponible 🚀`, 'info');
+  });
+});
+
+// Botones de Apple y Google en formulario de registro
+document.querySelectorAll('#register-form .social-login-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const provider = btn.classList.contains('apple') ? 'Apple' : 'Google';
+    showToast(`Registro con ${provider} próximamente disponible 🚀`, 'info');
+  });
+});
+
+// ========== SISTEMA DE USUARIOS ==========
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+let users = JSON.parse(localStorage.getItem('users') || '[]');
+
+function updateUserUI() {
+  const userProfileSection = document.getElementById('user-profile-section');
+  const menuLoginBtn = document.getElementById('menu-login-btn');
+  const menuLogoutBtn = document.getElementById('menu-logout-btn');
+
+  if (currentUser) {
+    // Usuario logueado
+    userProfileSection.classList.remove('hidden');
+    menuLoginBtn.classList.add('hidden');
+    menuLogoutBtn.classList.remove('hidden');
+
+    // Actualizar información del usuario
+    const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name-display').textContent = currentUser.name;
+    document.getElementById('user-email-display').textContent = currentUser.email;
+
+    // Actualizar perfil
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-name').textContent = currentUser.name;
+    document.getElementById('profile-email').textContent = currentUser.email;
+    document.getElementById('profile-total-spent').textContent = `$${(currentUser.totalSpent || 0).toFixed(2)}`;
+    document.getElementById('profile-orders-count').textContent = currentUser.ordersCount || 0;
+  } else {
+    // Usuario NO logueado
+    userProfileSection.classList.add('hidden');
+    menuLoginBtn.classList.remove('hidden');
+    menuLogoutBtn.classList.add('hidden');
+  }
+}
+
+// ========== MODAL DE LOGIN/REGISTRO ==========
+const userAuthModal = document.getElementById('user-auth-modal');
+const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+const loginTab = document.getElementById('login-tab');
+const registerTab = document.getElementById('register-tab');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const menuLoginBtn = document.getElementById('menu-login-btn');
+
+function showAuthModal() {
+  userAuthModal.classList.add('active');
+  closeHamburgerMenu();
+}
+
+function closeAuthModal() {
+  userAuthModal.classList.remove('active');
+}
+
+menuLoginBtn.addEventListener('click', showAuthModal);
+closeAuthModalBtn.addEventListener('click', closeAuthModal);
+
+loginTab.addEventListener('click', () => {
+  loginTab.classList.add('bg-blue-500', 'text-white');
+  loginTab.classList.remove('bg-white/5', 'text-gray-400');
+  registerTab.classList.remove('bg-blue-500', 'text-white');
+  registerTab.classList.add('bg-white/5', 'text-gray-400');
+  loginForm.classList.remove('hidden');
+  registerForm.classList.add('hidden');
+  document.getElementById('auth-modal-title').textContent = 'Iniciar Sesión';
+});
+
+registerTab.addEventListener('click', () => {
+  registerTab.classList.add('bg-blue-500', 'text-white');
+  registerTab.classList.remove('bg-white/5', 'text-gray-400');
+  loginTab.classList.remove('bg-blue-500', 'text-white');
+  loginTab.classList.add('bg-white/5', 'text-gray-400');
+  registerForm.classList.remove('hidden');
+  loginForm.classList.add('hidden');
+  document.getElementById('auth-modal-title').textContent = 'Registrarse';
+});
+
+// Login
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+
+  const user = users.find(u => u.email === email && u.password === password);
+
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    updateUserUI();
+    closeAuthModal();
+    showToast('¡Bienvenido de vuelta! 👋', 'success');
+    loginForm.reset();
+  } else {
+    showToast('Email o contraseña incorrectos', 'error');
+  }
+});
+
+// Registro
+registerForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('register-name').value;
+  const email = document.getElementById('register-email').value;
+  const password = document.getElementById('register-password').value;
+
+  // Verificar si el email ya existe
+  if (users.find(u => u.email === email)) {
+    showToast('Este email ya está registrado', 'error');
+    return;
+  }
+
+  // Crear nuevo usuario
+  const newUser = {
+    id: Date.now(),
+    name,
+    email,
+    password,
+    totalSpent: 0,
+    ordersCount: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  users.push(newUser);
+  localStorage.setItem('users', JSON.stringify(users));
+
+  currentUser = newUser;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  updateUserUI();
+  closeAuthModal();
+  showToast('¡Cuenta creada exitosamente! 🎉', 'success');
+  registerForm.reset();
+});
+
+// ========== MODAL DE PERFIL ==========
+const userProfileModal = document.getElementById('user-profile-modal');
+const viewProfileBtn = document.getElementById('view-profile-btn');
+const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+const closeProfileBtn = document.getElementById('close-profile-btn');
+
+viewProfileBtn.addEventListener('click', () => {
+  userProfileModal.classList.add('active');
+  closeHamburgerMenu();
+});
+
+closeProfileModalBtn.addEventListener('click', () => {
+  userProfileModal.classList.remove('active');
+});
+
+closeProfileBtn.addEventListener('click', () => {
+  userProfileModal.classList.remove('active');
+});
+
+// Cerrar sesión
+document.getElementById('menu-logout-btn').addEventListener('click', () => {
+  currentUser = null;
+  localStorage.removeItem('currentUser');
+  updateUserUI();
+  closeHamburgerMenu();
+  showToast('Sesión cerrada correctamente', 'info');
+});
+
+// Admin desde menú
+document.getElementById('menu-admin-btn').addEventListener('click', () => {
+  closeHamburgerMenu();
+  showLoginModal();
+});
+
+// ========== IA DE MERCADEO ==========
+// ========== IA DE MERCADEO ==========
+function toggleAIChat() {
+  const panel = document.getElementById('ai-chat-panel');
+  const overlay = document.getElementById('ai-chat-overlay');
+
+  if (!panel || !overlay) {
+    console.error('Elementos del chat no encontrados');
+    return;
+  }
+
+  const isClosed = panel.classList.contains('translate-x-full');
+
+  if (isClosed) {
+    // Abrir Panel
+    panel.classList.remove('translate-x-full');
+    overlay.classList.remove('pointer-events-none');
+    setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in suave
+    document.body.style.overflow = 'hidden'; // Bloquear scroll del body
+
+    // Focar input si es posible
+    setTimeout(() => document.getElementById('chat-input')?.focus(), 300);
+  } else {
+    // Cerrar Panel
+    panel.classList.add('translate-x-full');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => {
+      overlay.classList.add('pointer-events-none');
+      document.body.style.overflow = 'auto'; // Restaurar scroll
+    }, 300);
+  }
+}
+
+// Función para resetear el chat
+function resetAIChat() {
+  // Limpiar historial
+  conversationHistory = [];
+
+  // Limpiar mensajes (mantener solo el mensaje de bienvenida)
+  const chatMessages = document.getElementById('chat-messages');
+  if (chatMessages) {
+    chatMessages.innerHTML = `
+      <div class="flex gap-3 animate-fade-in">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+          IA
+        </div>
+        <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-none p-3 shadow-sm max-w-[85%]">
+          <p class="text-sm text-gray-700">
+            ¡Hola! Soy la <strong>IA de Mercadeo PCB</strong> 🤖📊<br><br>
+            Soy el asistente oficial del taller de Mercadeo de la Escuela Superior Vocacional Pablo Colón Berdecia.<br><br>
+            <strong>Puedo ayudarte con:</strong><br>
+            📚 Conceptos de mercadeo y ventas<br>
+            🧮 Cálculos de porcentajes y descuentos<br>
+            🍬 Productos de nuestra tienda<br>
+            📅 Calendario escolar y fechas importantes<br>
+            💼 Servicio al cliente y estrategias comerciales<br><br>
+            ¿En qué puedo ayudarte hoy?
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  showToast('💬 Nueva conversación iniciada', 'info');
+}
+
+// ========== CHATBOT CON CHATGPT ==========
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+const chatMessages = document.getElementById('chat-messages');
+const chatSubmitBtn = document.getElementById('chat-submit-btn');
+
+// Historial de conversación
+let conversationHistory = [];
+
+if (chatForm) {
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Deshabilitar input mientras procesa
+    chatInput.disabled = true;
+    if (chatSubmitBtn) chatSubmitBtn.disabled = true;
+
+    // 1. Mostrar mensaje del usuario
+    addMessage(text, 'user');
+    chatInput.value = '';
+
+    // 2. Simular "Escribiendo..."
+    showTyping();
+
+    try {
+      // 3. Intentar usar ChatGPT API
+      const response = await sendToChatGPT(text);
+      removeTyping();
+      addMessage(response, 'ai');
+    } catch (error) {
+      console.error('Error con ChatGPT:', error);
+      removeTyping();
+
+      // Fallback: usar IA local
+      const fallbackResponse = processAIResponse(text);
+      addMessage(fallbackResponse, 'ai');
+    } finally {
+      // Rehabilitar input
+      chatInput.disabled = false;
+      if (chatSubmitBtn) chatSubmitBtn.disabled = false;
+      chatInput.focus();
+    }
+  });
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement('div');
+  div.className = `flex gap-3 ${sender === 'user' ? 'flex-row-reverse' : ''}`;
+
+  const avatar = sender === 'ai'
+    ? `<div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">IA</div>`
+    : `<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold shrink-0">Tú</div>`;
+
+  const bubbleClass = sender === 'ai'
+    ? 'bg-white border border-gray-200 text-gray-700'
+    : 'bg-purple-600 text-white';
+
+  div.innerHTML = `
+    ${avatar}
+    <div class="${bubbleClass} rounded-2xl ${sender === 'ai' ? 'rounded-tl-none' : 'rounded-tr-none'} p-3 shadow-sm max-w-[85%] animate-slide-up">
+      <p class="text-sm leading-relaxed">${text}</p>
+    </div>
+  `;
+
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.id = 'typing-indicator';
+  div.className = 'flex gap-3';
+  div.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shrink-0">IA</div>
+    <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-none p-4 shadow-sm flex items-center gap-1">
+      <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+      <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+      <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+    </div>
+  `;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+// ========== CONEXIÓN CON CHATGPT API ==========
+async function sendToChatGPT(userMessage) {
+  // Verificar si AI_CONFIG está definido y configurado
+  if (typeof AI_CONFIG === 'undefined' || !AI_CONFIG.apiKey || AI_CONFIG.apiKey === 'TU_API_KEY_AQUI') {
+    throw new Error('API Key no configurada');
+  }
+
+  // Añadir mensaje al historial
+  conversationHistory.push({
+    role: 'user',
+    content: userMessage
+  });
+
+  // Preparar el system prompt con las instrucciones del GPT personalizado
+  const systemPrompt = `Eres IA de Mercadeo PCB, el asistente oficial del curso y taller de Mercadeo de la Escuela Superior Vocacional Pablo Colón Berdecia.
+
+═══════════════════════════════════════════════════════
+📋 INFORMACIÓN DEL PROGRAMA
+═══════════════════════════════════════════════════════
+
+PROGRAMA: Administración de Empresas
+ESPECIALIDAD: Representante de Ventas y Servicios Empresariales
+
+MISIÓN:
+Formar estudiantes con las competencias necesarias para desempeñarse con excelencia en ventas, servicio al cliente y áreas relacionadas al mercadeo, fomentando liderazgo, iniciativa, ética profesional y responsabilidad.
+
+VISIÓN:
+Ser un programa líder en la preparación de estudiantes técnicos altamente competentes, capaces de integrarse al mercado laboral o continuar estudios en áreas empresariales con una base sólida en mercadeo, ventas y servicio.
+
+VALORES:
+Fortalecer el espíritu de servicio y la conciencia cívica del estudiante para que sea más sensible y solidario con los demás.
+
+═══════════════════════════════════════════════════════
+👩‍🏫 INFORMACIÓN DE LA MAESTRA
+═══════════════════════════════════════════════════════
+
+Nombre: Ada J. Rivera Alejandro
+Años de experiencia: 20 años
+Correo electrónico: de155982@miescuela.pr (solo para fines informativos)
+
+═══════════════════════════════════════════════════════
+📚 ÁREAS DE ADIESTRAMIENTO
+═══════════════════════════════════════════════════════
+
+• Ventas y Servicio al Cliente
+• Compras
+• Finanzas
+• Publicidad
+• Relaciones Públicas
+• Empaque
+• Operaciones de Negocios
+• Promoción de Ventas
+• Envoltura Artística
+• Manejo de Caja Registradora
+• Mercadeo Digital
+
+═══════════════════════════════════════════════════════
+💼 OPORTUNIDADES DE EMPLEO
+═══════════════════════════════════════════════════════
+
+Los estudiantes que completan esta especialidad pueden desempeñarse en:
+
+• Representante de ventas
+• Asociado de servicio al cliente
+• Cajero/a
+• Promotor o merchandiser
+• Auxiliar de oficina o asistente de mercadeo
+• Empleos en tiendas por departamento, supermercados y empresas de servicios
+• Posiciones iniciales en publicidad, inventario y ventas digitales
+
+═══════════════════════════════════════════════════════
+✨ ¿POR QUÉ ELEGIR MERCADEO?
+═══════════════════════════════════════════════════════
+
+• Es un taller dinámico, práctico y centrado en experiencias reales
+• Desarrolla destrezas esenciales que buscan todos los patrones
+• Fortalece la comunicación, seguridad personal y liderazgo
+• Prepara para competencias y certificaciones a través de DECA
+• Permite participar activamente en la Cooperativa Juvenil
+• Amplía las oportunidades de empleo y estudios universitarios
+• Forma estudiantes creativos, proactivos y preparados para el mundo laboral
+
+═══════════════════════════════════════════════════════
+📝 REQUISITOS DE ADMISIÓN
+═══════════════════════════════════════════════════════
+
+• Promedio general mínimo de 2.00
+• Buena conducta y disposición para el trabajo en equipo
+• Interés en ventas, servicio al cliente o negocios
+• Ingresar al programa desde noveno grado
+
+TUS FUNCIONES:
+1. Apoyas a estudiantes explicando mercadeo, ventas, servicio al cliente y matemáticas aplicadas de forma clara y paso a paso, como un tutor paciente
+2. Eres experto en:
+   - Marketing y estrategias de mercadeo
+   - Cálculo de porcentajes, descuentos, márgenes de ganancia
+   - Técnicas de ventas y negociación
+   - Servicio al cliente y atención
+   - Matemáticas comerciales aplicadas
+   - Análisis de mercado y competencia
+   - Estrategias de promoción y publicidad
+3. Ayudas con la tienda de dulces del taller, recomendando productos y calculando precios
+4. Respondes preguntas sobre el calendario escolar y fechas importantes
+
+CALENDARIO ESCOLAR (FEBRERO - MAYO 2025):
+
+📅 FEBRERO
+• 13 de febrero: Reuniones profesionales de facultad (tarde)
+• 16 de febrero: Día festivo
+• 19 de febrero: Assessment
+
+📅 MARZO
+• 2 de marzo: Día festivo
+• 16 de marzo: Assessment
+• 20 de marzo: Reuniones profesionales de facultad (tarde)
+• 23 de marzo: Día festivo
+• 27 de marzo: Entrega del informe de progreso académico
+
+📅 ABRIL
+• 2 de abril: Receso académico
+• 3 de abril: Feriado
+• 13 de abril al 7 de mayo: Assessment
+
+📅 MAYO
+• 13 de abril al 7 de mayo: Assessment (continúa)
+• 18 al 22 de mayo: Semana de la Educación
+• 22 de mayo: Receso académico
+• 25 de mayo: Feriado
+• 26 y 27 de mayo: Evaluaciones finales
+• 29 de mayo: Entrega del informe de progreso académico
+
+INFORMACIÓN DEL TALLER:
+Para información general del taller y Casa Abierta: https://hackerpcb1.github.io/Casa-Abierta/mercadeo.html
+
+PRODUCTOS DISPONIBLES EN LA TIENDA:
+${JSON.stringify(candies, null, 2)}
+
+TU ESTILO:
+- Tono respetuoso, educativo y motivador
+- Explicas paso a paso, como un tutor paciente
+- Usas emojis de forma natural 🍬📊💼
+- Hablas en español de Puerto Rico
+- Guías sin hacer trabajos por el estudiante
+- Fomentas el pensamiento crítico y el aprendizaje
+
+IMPORTANTE: Cuando te pregunten sobre cálculos (porcentajes, descuentos, ganancias), explica el proceso paso a paso para que el estudiante aprenda.`;
+
+
+  // Preparar el payload
+  const payload = {
+    model: AI_CONFIG.model || 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      ...conversationHistory
+    ],
+    max_tokens: AI_CONFIG.maxTokens || 500,
+    temperature: AI_CONFIG.temperature || 0.7
+  };
+
+  // Hacer la petición a la API
+  const response = await fetch(AI_CONFIG.apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${AI_CONFIG.apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+  }
+
+  const data = await response.json();
+  const aiResponse = data.choices[0].message.content;
+
+  // Añadir respuesta al historial
+  conversationHistory.push({
+    role: 'assistant',
+    content: aiResponse
+  });
+
+  // Limitar historial a últimos 20 mensajes (10 intercambios)
+  if (conversationHistory.length > 20) {
+    conversationHistory = conversationHistory.slice(-20);
+  }
+
+  return aiResponse;
+}
+
+// ========== IA LOCAL (FALLBACK) ==========
+function processAIResponse(input) {
+  input = input.toLowerCase();
+
+  // Saludos
+  if (input.match(/hola|buenos|buenas|hey/)) {
+    return "¡Hola! 👋 Soy tu asistente de Mercadeo. ¿Buscas algo dulce, salado o una bebida?";
+  }
+
+  // Comandos de productos
+  const foundCandies = candies.filter(c => input.includes(c.name.toLowerCase()) || input.includes(c.category));
+
+  if (foundCandies.length > 0) {
+    const list = foundCandies.slice(0, 3).map(c => `• ${c.emoji} **${c.name}** ($${c.price.toFixed(2)})`).join('<br>');
+    return `¡Claro! Aquí tienes algunas opciones que te pueden gustar:<br><br>${list}<br><br>¿Quieres que añada alguno al carrito?`;
+  }
+
+  // Precios
+  if (input.includes('precio') || input.includes('cuesta') || input.includes('vale')) {
+    return "Los precios varían entre $0.25 y $1.50. ¿Tienes un presupuesto en mente?";
+  }
+
+  // Ayuda general
+  if (input.includes('ayuda') || input.includes('que haces')) {
+    return "Puedo ayudarte a:<br>1. Buscar dulces 🍬<br>2. Ver precios 💰<br>3. Sugerirte combinaciones 🥤";
+  }
+
+  // Default
+  return "Mmm, interesante. 🤔 No estoy segura de entender eso, pero puedo mostrarte nuestros dulces más populares si escribes 'popular'.";
+}
+// ========== SISTEMA DE NOTIFICACIONES ==========
+let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+let notificationPermission = localStorage.getItem('notificationPermission') || 'default';
+
+// Solicitar permiso para notificaciones del navegador
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      notificationPermission = permission;
+      localStorage.setItem('notificationPermission', permission);
+      if (permission === 'granted') {
+        showToast('✅ Notificaciones activadas', 'success');
+        addNotification('🎉 ¡Bienvenido!', 'Las notificaciones están activadas. Te avisaremos de ofertas y novedades.', 'info');
+      }
+    });
+  }
+}
+
+// Añadir notificación
+function addNotification(title, message, type = 'info', icon = '🔔') {
+  const notification = {
+    id: Date.now(),
+    title,
+    message,
+    type,
+    icon,
+    time: new Date().toISOString(),
+    read: false
+  };
+
+  notifications.unshift(notification);
+
+  // Limitar a 50 notificaciones
+  if (notifications.length > 50) {
+    notifications = notifications.slice(0, 50);
+  }
+
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  updateNotificationUI();
+
+  // Mostrar notificación del navegador si está permitido
+  if (notificationPermission === 'granted' && 'Notification' in window) {
+    new Notification(title, {
+      body: message,
+      icon: 'galeria/image1.png',
+      badge: 'galeria/image1.png',
+      tag: notification.id.toString()
+    });
+  }
+}
+
+// Actualizar UI de notificaciones
+function updateNotificationUI() {
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('notification-count');
+  const list = document.getElementById('notification-list');
+  const banner = document.getElementById('enable-notifications-banner');
+
+  // Mostrar/ocultar banner de activación
+  if ('Notification' in window && Notification.permission === 'default') {
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+
+  // Actualizar badge
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+
+  // Actualizar lista
+  if (notifications.length === 0) {
+    list.innerHTML = `
+      <div class="notification-empty">
+        <div class="text-4xl mb-2">🔔</div>
+        <p>No tienes notificaciones</p>
+      </div>
+    `;
+  } else {
+    list.innerHTML = notifications.map(n => `
+      <div class="notification-item ${!n.read ? 'unread' : ''}" data-id="${n.id}">
+        <div class="flex items-start gap-3">
+          <div class="notification-icon bg-${getNotificationColor(n.type)}/20">
+            ${n.icon}
+          </div>
+          <div class="notification-content flex-1">
+            <div class="notification-title">${n.title}</div>
+            <div class="notification-message">${n.message}</div>
+            <div class="notification-time">${getTimeAgo(n.time)}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Añadir event listeners
+    document.querySelectorAll('.notification-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = parseInt(item.dataset.id);
+        markAsRead(id);
+      });
+    });
+  }
+}
+
+function getNotificationColor(type) {
+  const colors = {
+    'info': 'blue',
+    'success': 'green',
+    'warning': 'yellow',
+    'error': 'red',
+    'offer': 'purple'
+  };
+  return colors[type] || 'blue';
+}
+
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diff = Math.floor((now - time) / 1000); // segundos
+
+  if (diff < 60) return 'Ahora';
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+  if (diff < 604800) return `Hace ${Math.floor(diff / 86400)} días`;
+  return time.toLocaleDateString();
+}
+
+function markAsRead(id) {
+  const notification = notifications.find(n => n.id === id);
+  if (notification) {
+    notification.read = true;
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationUI();
+  }
+}
+
+function clearAllNotifications() {
+  notifications = [];
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  updateNotificationUI();
+  showToast('Notificaciones eliminadas', 'info');
+}
+
+// Toggle panel de notificaciones
+const notificationBell = document.getElementById('notification-bell');
+const notificationPanel = document.getElementById('notification-panel');
+
+notificationBell.addEventListener('click', (e) => {
+  e.stopPropagation();
+  notificationPanel.classList.toggle('active');
+});
+
+// Cerrar panel al hacer click fuera
+document.addEventListener('click', (e) => {
+  if (!notificationPanel.contains(e.target) && !notificationBell.contains(e.target)) {
+    notificationPanel.classList.remove('active');
+  }
+});
+
+// Limpiar notificaciones
+document.getElementById('clear-notifications').addEventListener('click', clearAllNotifications);
+
+// Botón para activar notificaciones manualmente
+document.getElementById('enable-notifications-btn').addEventListener('click', () => {
+  requestNotificationPermission();
+});
+
+// Solicitar permiso al cargar (después de 3 segundos)
+setTimeout(() => {
+  if (notificationPermission === 'default') {
+    requestNotificationPermission();
+  }
+}, 3000);
+
+// Inicializar
+initSplashScreen();
+updateUserUI();
+updateNotificationUI();
 init();
